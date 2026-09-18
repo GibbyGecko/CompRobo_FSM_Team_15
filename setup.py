@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'behaviors_fsm_node = ros_behaviors_fsm.behaviors_fsm_node:main'
+            'behaviors_fsm_node = ros_behaviors_fsm.behaviors_fsm_node:main',
+            'wall_following = ros_behaviors_fsm.wall_following:main',
         ],
     },
 )

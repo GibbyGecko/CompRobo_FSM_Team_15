@@ -26,6 +26,9 @@ setup(
         'console_scripts': [
             'behaviors_fsm_node = ros_behaviors_fsm.behaviors_fsm_node:main',
             'wall_following = ros_behaviors_fsm.wall_following:main',
+            'bump_estop = ros_behaviors_fsm.bump_estop:main',
+            'drive_square = ros_behaviors_fsm.drive_square:main',
+            'collision_avoidance = ros_behaviors_fsm.collision_avoidance:main'
         ],
     },
 )

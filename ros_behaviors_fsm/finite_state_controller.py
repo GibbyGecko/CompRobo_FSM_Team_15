@@ -8,26 +8,26 @@ from neato2_interfaces.msg import Bump
 import threading
 
 from ros_behaviors_fsm.drive_square import DriveSquareNode
-from ros_behaviors_fsm.collision_avoidance import CollisionAvoidanceNode
+from ros_behaviors_fsm.spiral_collision_avoidance import SpiralCollisionAvoidanceNode
 from ros_behaviors_fsm.wall_follower import WallFollowingNode
 from ros_behaviors_fsm.bump_estop import EmergencyStopNode
 
 
 class State(Enum):
     DRIVE_SQUARE = 1
-    COLLISION_AVOIDANCE = 2
+    SPIRAL = 2
     WALL_FOLLOWING = 3
 
 
 class BehaviorFSMNode(Node):
-    def __init__(self, square, collision, wall, estop):
+    def __init__(self, square, spiral, wall, estop):
         super().__init__('finite_state_controller')
         self.square = square
-        self.collision = collision
+        self.spiral = spiral
         self.wall = wall
         self.estop = estop
 
-        for node in (square, collision, wall, estop):
+        for node in (square, spiral, wall, estop):
             for timer in node.timers:
                 timer.cancel()
 
@@ -62,11 +62,11 @@ class BehaviorFSMNode(Node):
 
     def run_loop(self):
         sim_bump, self.sim_bump = self.sim_bump, False 
-        if self.state == State.COLLISION_AVOIDANCE and (
+        if self.state == State.SPIRAL and (
                 (self.left_side and self.right_side) or sim_bump):
             self.set_state(State.WALL_FOLLOWING)
         
-        if self.state == State.COLLISION_AVOIDANCE and self.left_side and self.right_side:
+        if self.state == State.SPIRAL and self.left_side and self.right_side:
             self.set_state(State.WALL_FOLLOWING)
 
         if self.estop.bump_state:
@@ -76,9 +76,9 @@ class BehaviorFSMNode(Node):
         if self.state == State.DRIVE_SQUARE:
             self.square.run_loop()
             if self.square.sides_completed >= self.square.total_sides:
-                self.set_state(State.COLLISION_AVOIDANCE)
-        elif self.state == State.COLLISION_AVOIDANCE:
-            self.collision.run_loop()
+                self.set_state(State.SPIRAL)
+        elif self.state == State.SPIRAL:
+            self.spiral.run_loop()
         elif self.state == State.WALL_FOLLOWING:
             self.wall.run_loop()
 
@@ -86,12 +86,12 @@ class BehaviorFSMNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     square = DriveSquareNode()
-    collision = CollisionAvoidanceNode()
+    spiral = SpiralCollisionAvoidanceNode()
     wall = WallFollowingNode()
     estop = EmergencyStopNode()
-    fsm = BehaviorFSMNode(square, collision, wall, estop)
+    fsm = BehaviorFSMNode(square, spiral, wall, estop)
 
-    nodes = (fsm, square, collision, wall, estop)
+    nodes = (fsm, square, spiral, wall, estop)
     executor = SingleThreadedExecutor()
     for node in nodes:
         executor.add_node(node)

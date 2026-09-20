@@ -1,4 +1,3 @@
-""" Drive the Neato in a square, open-loop """
 import math
 import rclpy
 from rclpy.node import Node

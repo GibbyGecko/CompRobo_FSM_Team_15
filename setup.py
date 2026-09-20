@@ -28,7 +28,8 @@ setup(
             'wall_follower = ros_behaviors_fsm.wall_follower:main',
             'bump_estop = ros_behaviors_fsm.bump_estop:main',
             'drive_square = ros_behaviors_fsm.drive_square:main',
-            'collision_avoidance = ros_behaviors_fsm.collision_avoidance:main'
+            'collision_avoidance = ros_behaviors_fsm.collision_avoidance:main',
+            'spiral_collision_avoidance = ros_behaviors_fsm.spiral_collision_avoidance:main'
         ],
     },
 )

@@ -24,8 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'behaviors_fsm_node = ros_behaviors_fsm.behaviors_fsm_node:main',
-            'wall_following = ros_behaviors_fsm.wall_following:main',
+            'finite_state_controller = ros_behaviors_fsm.finite_state_controller:main',
+            'wall_follower = ros_behaviors_fsm.wall_follower:main',
             'bump_estop = ros_behaviors_fsm.bump_estop:main',
             'drive_square = ros_behaviors_fsm.drive_square:main',
             'collision_avoidance = ros_behaviors_fsm.collision_avoidance:main'

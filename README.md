@@ -1,11 +1,11 @@
 # CompRobo_FSM_Team_15
 # RoboBehaviors and Finite State Machines Project
 
-Author names: 
+Author names: Ophelia Lonzo, Liam Brennan
 
 ## Project Overview
 
-For this project we programmed a Neato to run a sequence of behaviors inside a finite state machine. During this sequence  it drives a square, creeps forward until an obstacle is within 1 m, and then finds a wall and follows it. During this sequence a bump-sensor e-stop is running for safety. 
+For this project we programmed a Neato to run a sequence of behaviors inside a finite state machine. During this sequence it drives a square, creeps forward until an obstacle is within 1 m, and then finds a wall and follows it. During this sequence a bump-sensor e-stop is running for safety. 
 
 
 Key design choices:
@@ -22,7 +22,7 @@ https://youtu.be/z4P78htCtCk
 
 **What it does.** The Neato drives a 1 m by 1 m square: straight for 1 m, turn 90 degrees left, repeated four times, and then stops.
 
-**Implementation.** `DriveSquareNode` runs a 10 Hz timer that publishes `geometry_msgs/Twist` to `cmd_vel`. It ia small state machine (straight, turn) with a counter of completed sides. It subscribes to `odom` (`nav_msgs/Odometry`) and converts its orientation to an angle.
+**Implementation.** `DriveSquareNode` runs a 10 Hz timer that publishes `geometry_msgs/Twist` to `cmd_vel`. It is small state machine (straight, turn) with a counter of completed sides. It subscribes to `odom` (`nav_msgs/Odometry`) and converts its orientation to an angle.
 
 **Design decisions.** Straight segments are timed (length of a side divided by speed, 5 s at 0.2 m/s). Our first version also timed the turns (90 degrees divided by the angular speed), but the turns were very innacurate as the neato is genreally innacurate.  The node now records the yaw at the start of the turn and turns until the change in yaw reaches pi/2,, slowing down to avoid overshoot. 
 
@@ -36,7 +36,9 @@ https://youtu.be/z4P78htCtCk
 
 **Design decisions.** The stop does not end the state machine, the robot resumes when the bumpers release. On its own the node also drives forward at 0.1 m/s when nothing is bumped, so inside the FSM we do not run its timer and only read `bump_state`.
 
-[add a gif of a estop and a bag with a estop]
+Bag: `bags/drive_square_demo`
+<img width="578" height="796" alt="Screencast from 2026-09-20 22-00-58" src="https://github.com/user-attachments/assets/3e37232f-ab2c-41c4-8b62-89f857bd338a" />
+
 
 ### Behavior 3: Collision avoidance (`collision_avoidance.py`)
 
@@ -46,7 +48,7 @@ https://youtu.be/z4P78htCtCk
 
 **Design decisions.** 
 
-[add a bag of collision avoidance] Bag: `bags/collision_avoidance_demo`
+Bag: `bags/collision_avoidance_demo`
 
 ### Behavior 4: Wall following (`wall_follower.py`)
 

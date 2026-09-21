@@ -26,8 +26,10 @@ https://youtu.be/z4P78htCtCk
 
 **Design decisions.** Straight segments are timed (length of a side divided by speed, 5 s at 0.2 m/s). Our first version also timed the turns (90 degrees divided by the angular speed), but the turns were very innacurate as the neato is genreally innacurate.  The node now records the yaw at the start of the turn and turns until the change in yaw reaches pi/2,, slowing down to avoid overshoot. 
 
+<img width="578" height="796" alt="Screencast from 2026-09-20 22-00-58" src="https://github.com/user-attachments/assets/3e37232f-ab2c-41c4-8b62-89f857bd338a" />
 
-[{add a bag recording] 
+Bag: `bags/drive_square_demo`
+
 ### Behavior 2: Emergency stop (`bump_estop.py`)
 
 **What it does.** Stops the robot when any of the fbump sensors is triggered.
@@ -36,27 +38,35 @@ https://youtu.be/z4P78htCtCk
 
 **Design decisions.** The stop does not end the state machine, the robot resumes when the bumpers release. On its own the node also drives forward at 0.1 m/s when nothing is bumped, so inside the FSM we do not run its timer and only read `bump_state`.
 
-Bag: `bags/drive_square_demo`
-<img width="578" height="796" alt="Screencast from 2026-09-20 22-00-58" src="https://github.com/user-attachments/assets/3e37232f-ab2c-41c4-8b62-89f857bd338a" />
-
-
 ### Behavior 3: Collision avoidance (`collision_avoidance.py`)
 
 **What it does.** Drives forward slowly and stops when something is within 1 m in front.
 
-**Implementation.** `CollisionAvoidanceNode` subscribes to `scan` (`sensor_msgs/LaserScan`) and reads the ray straight ahead, and publishes 0.1 m/s forward or zero to cmd_vel`.
+**Implementation.** `CollisionAvoidanceNode` subscribes to `scan` (`sensor_msgs/LaserScan`) and reads the ray straight ahead, and publishes 0.1 m/s forward or zero to 'cmd_vel`.
+
+**Design decisions.** When run by itself it is able to switch back and forth between the stopped and driving states so it can continue if the obstacle moves out of the way, however when being run with the rest of our FSM the state change to stopped acts as a trigger to switch to the next behavior.
+
+<img width="578" height="796" alt="Screencast from 2026-09-20 22-15-10" src="https://github.com/user-attachments/assets/195dcb5b-edf9-4aa7-a610-4723ece6a0b7" />
+
+Bag: `bags/collision_avoidance_demo`
+
+### Behavior 4: Spiral Collision avoidance (`spiral_collision_avoidance.py`)
+
+**What it does.** Drives in a expanding spiral until it has completed a complete rotation or if it sees something in a 30 Deg cone in front of it within 1 m.
+
+**Implementation.** `SpiralCollisionAvoidanceNode` subscribes to `scan` (`sensor_msgs/LaserScan`) and reads the rays in a 30 Deg cone in front of itself, and publishes its linear and angular velocities to 'cmd_vel' such that it follows a spiral that starts with a radius of 0.2 m which grows by 0.03 m every 0.1 sec.
 
 **Design decisions.** 
 
-Bag: `bags/collision_avoidance_demo`
+<img width="578" height="796" alt="Screencast from 2026-09-20 22-50-39" src="https://github.com/user-attachments/assets/5bbef3ca-e2b9-4869-ae3c-09619e4af2cb" />
+
+Bag: `bags/spiral_collision_avoidance`
 
 ### Behavior 4: Wall following (`wall_follower.py`)
 
 **What it does.** Approaches a wall, turns until it is parallel, then drives along it at a set distance.
 
 **Geometry.** When the wall is on the robot's right the node uses two laser rays 30 degrees either side of the perpendicular (at angle 300 and 240). If the front ray is longer than the back ray, the robot is pointing away from the wall. The angle error is the difference between the two ranges, and the distance to the wall is their mean times cos(30 degrees).
-
-[add a picture of the wall geometrey]
 
 **Implementation.** `WallFollowingNode` subscribes to `scan` and publishes `Twist` to`cmd_vel` . It has three states:
 - Approach: proportionally approches until it is 0.5 m from the wall.
@@ -66,9 +76,15 @@ Bag: `bags/collision_avoidance_demo`
 **Design decisions.** 
 
 
-**Visualization.** The detected wall is drawn in rviz as a line through the two ray hit points. [screenshot]
+**Visualization.** The detected wall is drawn in rviz as a line through the two ray hit points.(the two gifs are not of the same simulation)
 
-[add a wall following bag]
+<img width="790" height="682" alt="Screencast from 2026-09-20 23-12-20" src="https://github.com/user-attachments/assets/ba63bdb4-112d-45fa-83c6-3aa2606b455b" />
+
+
+<img width="578" height="796" alt="Screencast from 2026-09-20 22-33-05" src="https://github.com/user-attachments/assets/b391bff8-67a6-472b-9ac3-aab1470d04be" />
+
+Bag: `bags/wall_follower_demo`
+
 ## Finite State Machine
 
 ### Overall Design
@@ -108,7 +124,8 @@ Capabilities and limitations:
 
 [demo on real neato, what is bad with a real neato]
 
-[bag of full fsm]
+Bag: `bags/finite_state_controller_demo`
+
 ## Challenges
 
 -   Turns overshot 90 degrees, we switched to use odometry .

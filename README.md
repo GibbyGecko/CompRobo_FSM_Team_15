@@ -5,13 +5,13 @@ Author names: Ophelia Lonzo, Liam Brennan
 
 ## Project Overview
 
-For this project we programmed a Neato to run a sequence of behaviors inside a finite state machine. During this sequence it drives a square, creeps forward until an obstacle is within 1 m, and then finds a wall and follows it. During this sequence a bump-sensor e-stop is running for safety. 
+For this project we programmed a Neato to run a sequence of behaviors inside a finite state machine. During this sequence it drives a square, drives forward in a spiral until it; sees something, completes a full circle, or you push both side bumpers, and then finds a wall and follows it. During this sequence a bump-sensor e-stop is running for safety. 
 
 
 Key design choices:
 - Only one node controls`cmd_vel`. This node calls each behavior node, cancels their timers, and calls just the active behavior each tick, so there is no conflict over which behaviors is getting published to `cmd_vel`.
 - The emergency stop is not a state, but a override that is constantly running. 
-- The turning during the driving in square state uses odometry yaw instead of timing, after timed turns caused angle innacuricies
+- The turning during the driving in square state uses odometry yaw instead of timing, after timed turns caused angle inaccuracies.
 
 
 
@@ -24,7 +24,7 @@ https://youtu.be/z4P78htCtCk
 
 **Implementation.** `DriveSquareNode` runs a 10 Hz timer that publishes `geometry_msgs/Twist` to `cmd_vel`. It is small state machine (straight, turn) with a counter of completed sides. It subscribes to `odom` (`nav_msgs/Odometry`) and converts its orientation to an angle.
 
-**Design decisions.** Straight segments are timed (length of a side divided by speed, 5 s at 0.2 m/s). Our first version also timed the turns (90 degrees divided by the angular speed), but the turns were very innacurate as the neato is genreally innacurate.  The node now records the yaw at the start of the turn and turns until the change in yaw reaches pi/2,, slowing down to avoid overshoot. 
+**Design decisions.** Straight segments are timed (length of a side divided by speed, 5 s at 0.2 m/s). Our first version also timed the turns (90 degrees divided by the angular speed), but the turns were very inaccurate as the neato is generally inaccurate. The node now records the yaw at the start of the turn and turns until the change in yaw reaches pi/2,, slowing down to avoid overshoot. 
 
 <img width="578" height="796" alt="Screencast from 2026-09-20 22-00-58" src="https://github.com/user-attachments/assets/3e37232f-ab2c-41c4-8b62-89f857bd338a" />
 
@@ -89,17 +89,16 @@ Bag: `bags/wall_follower_demo`
 
 ### Overall Design
 
-A Neato running the FSM drives a square, then slowly approaches  the wall in front of it and stops 1 m away. When both side bumpers are pressed (or Enter is pressed for  simulation), it approaches the wall, turns parallel, and follows it. At any point, pressing any bumper e-stops the robot until the bumper is released.
+A Neato running the FSM drives a square, drives forward in a spiral until it; sees something, or completes a full circle. When both side bumpers are pressed (or Enter is pressed for simulation), it approaches the wall, turns parallel, and follows it. At any point, pressing any bumper e-stops the robot until the bumper is released.
 
 States:
 - Drive square: runs `drive_square.py` until four sides are completed.
-- Collision avoidance: runs `collision_avoidance.py`, which stops the robot 1 m from an obstacle.
+- Spiral collision avoidance: runs `spiral_collision_avoidance.py`, which drives one full spiral with lidar collision avoidance.
 - Wall following: runs `wall_follower.py` (approaches, turns, follows).
 
 Transitions:
-- Drive square to collision avoidance: four sides completed.
-- Collision avoidance to wall following: both side bumpers pressed, or Enter in simulation.
-
+- Drive square to spiral collision avoidance: four sides completed.
+- Spiral collision avoidance to wall following: both side bumpers pressed, or Enter in simulation.
 - Emergency stop: any bump publishes zero velocity in any state.
 
 
@@ -111,12 +110,11 @@ Transitions:
 Each tick, the FSM first checks the collision-avoidance transition (both side bumpers, or the keyboard flag), then the emergency stop via `EmergencyStopNode.bump_state`, and only then runs the current behavior. Progress through the square is read from the node's own `sides_completed` counter.
 
 We chose this over rewriting all behaviors in one node so each file stays a standalone, testable node with its own `main().
-This also made creating the FSM much easier and made tuning each behavior much more conveinient
+This also made creating the FSM much easier and made tuning each behavior much more convenient
 
 Capabilities and limitations:
 - The FSM is a fixed sequence with no transitions back.
 - Wall following never exits.
-
 - The robot must start facing a wall more than about 1.5 m away.
 
 
@@ -128,7 +126,7 @@ Bag: `bags/finite_state_controller_demo`
 
 ## Challenges
 
--   Turns overshot 90 degrees, we switched to use odometry .
+- Turns overshot 90 degrees, we switched to use odometry .
 - Behaviors written as standalone nodes all publish to `cmd_vel`, so running them together made them fight. The supervisor design fixed this.
 - `bump_estop.py` drives the robot when nothing is bumped, so it could not run alongside other behaviors as written.
 
@@ -136,7 +134,6 @@ Bag: `bags/finite_state_controller_demo`
 
 - A emergency stop that needs a reset.
 - More robust wall detection using many rays instead of two.
-
 - A transition that does not depend on a person pressing the bumpers.
 
 

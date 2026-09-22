@@ -111,7 +111,7 @@ Transitions:
 
 Each tick, the FSM first checks the collision-avoidance transition (both side bumpers, or the keyboard flag), then the emergency stop via `EmergencyStopNode.bump_state`, and only then runs the current behavior. Progress through the square is read from the node's own `sides_completed` counter.
 
-We chose this over rewriting all behaviors in one node so each file stays a standalone, testable node with its own `main().
+We chose this over rewriting all behaviors in one node so each file stays a standalone, testable node with its own `main()'.
 This also made creating the FSM much easier and made tuning each behavior much more convenient
 
 Capabilities and limitations:

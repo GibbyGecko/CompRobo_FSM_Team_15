@@ -1,6 +1,5 @@
-""" This node uses the laser scan measurement pointing straight ahead from
-    the robot and compares it to a desired set distance.  The forward velocity
-    of the robot is adjusted until the robot achieves the desired distance """
+""" This node includes a simple state machine to follow a wall using laser data. 
+The robot will approach the wall, turn to be parralel to the wall, and then follow the wall at a set distance. """
 
 import rclpy
 from rclpy.node import Node
@@ -23,7 +22,7 @@ class State(Enum):
     TURN = 3
 
 class WallFollowingNode(Node):
-    """ This class wraps the basic functionality of the node """
+    """Initializes the node, sets up the publisher and subscriber, and initializes parameters for the wall following state machine"""
     def __init__(self):
         super().__init__('wall_approach')
         # the run_loop adjusts the robot's velocity based on latest laser data
@@ -37,26 +36,25 @@ class WallFollowingNode(Node):
         # target_distance is the desired distance to the obstacle in front
         self.state = State.APPROACH
         self.ray_offset = 30 #offset from perpendicular for the ray used to detect the wall
-        self.target_distance = 0.5
-        self.front = None
-        self.back = None
-        self.side_angle = 270
-        self.follow_speed = 0.3
-        self.follow_distance = 0.5
-        self.Kp_angle = 1.0
-        self.Kp_distance = 0.5
+        self.target_distance = 0.5 #how far away the robot from the wall the robot will be before it starts turning
+        self.side_angle = 270 #default angle of perpindicular ray
+        self.follow_speed = 0.3 #how fast(m/s) the robot will move while following the wall
+        self.follow_distance = 0.5 #how far away the robot will try to stay from the wall while following
+        self.Kp_angle = 1.0 #gain for the angle error while following the wall
+        self.Kp_distance = 0.5 #gain for the distance error while following the wall
         self.parralel_tolerance = 0.05 # offset from parralel to the wall to consider the robot parralel to the wall
-        self.approach_tolerance = 0.05
+        self.approach_tolerance = 0.05 # offset from the target distance to consider the robot at the target distance
         self.side = 1.0 if self.side_angle == 270 else -1.0 #determines if the robot is following the wall on the left or right side
-        self.turn_speed = 0.5
+        self.turn_speed = 0.5 #angular speed to turn the robot while turning to follow the wall (rads/s)
         self.marker_pub = self.create_publisher(Marker, 'wall_marker', 10)
-        self.side_front = None
-        self.side_back = None
+        self.side_front = None #creates the front ray variable
+        self.side_back = None #creates the back ray variable
         self.scan_frame = None
-        self.scan_stamp = None
+        self.scan_stamp = None 
 
 
     def run_loop(self):
+        "Calls each state's function and publishes the resulting velocity command to the robot"
         msg = Twist()
         if self.state == State.APPROACH:
                     msg = self.do_approach()
@@ -68,6 +66,7 @@ class WallFollowingNode(Node):
         self.publish_wall_marker()
 
     def do_approach(self):
+        "Approaches the wall until the robot is at the target distance, then switches to turning state"
         msg = Twist()
         if self.distance_to_obstacle is None:
             msg.linear.x = 0.0
@@ -81,6 +80,7 @@ class WallFollowingNode(Node):
         return msg
               
     def do_turn(self):
+        "Turns the robot until the front and back rays are parralel to the wall, then switches to the following state"
         msg = Twist()
         turn_dir = self.side 
         if self.side_front is not None and self.side_back is not None:
@@ -92,6 +92,7 @@ class WallFollowingNode(Node):
 
 
     def do_follow(self):
+        "Follows the wall at the target distance, adjusting to stay parralel to the wall"
         msg = Twist()
         if self.side_front is None or self.side_back is None:
             msg.linear.x = 0.05
@@ -104,7 +105,7 @@ class WallFollowingNode(Node):
         return msg
 
     def process_scan(self, msg):
-
+        "Processes the laser scan data to determine the distance to the wall and the front and back rays"
         r = msg.ranges
         if r[0] != 0.0:
             self.distance_to_obstacle = r[0]
@@ -116,6 +117,7 @@ class WallFollowingNode(Node):
         self.scan_stamp = msg.header.stamp
 
     def publish_wall_marker(self):
+        "Publishes a marker to visualize the front and back rays used to follow the wall"
         def valid(r):
             return r is not None and math.isfinite(r) and r > 0.0
 

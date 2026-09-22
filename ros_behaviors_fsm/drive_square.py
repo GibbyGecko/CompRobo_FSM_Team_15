@@ -1,3 +1,5 @@
+"""This node implements a simple state machine to drive the robot in a square pattern. 
+The robot will drive straight for a set distance, then turn 90 degrees, and repeat this process for a total of four sides."""
 import math
 import rclpy
 from rclpy.node import Node
@@ -6,6 +8,7 @@ from nav_msgs.msg import Odometry
 
 class DriveSquareNode(Node):
     def __init__(self):
+        "This class Initializes the node, sets up the publisher and subscriber, and initializes parameters for driving in a square pattern"
         super().__init__('drive_square_node')
         self.publisher = self.create_publisher(Twist, 'cmd_vel', 10)
         self.timer_period = 0.1
@@ -17,29 +20,29 @@ class DriveSquareNode(Node):
         self.straight_time = self.side_length / self.linear_speed
         self.turn_angle_time = self.turn_angle / self.angular_speed
 
-        self.state = 'straight' # or 'turn'
+        self.state = 'straight' # or turn
         self.state_elapsed_time = 0.0
         self.sides_completed = 0
         self.total_sides = 4
-        # state tracking, ie straight or turning, and how long we've been in that state, and which side we are on
         self.create_subscription(Odometry, 'odom', self.process_odom, 10)
-        self.yaw = None              # latest heading from odometry (rad)
-        self.turn_start_yaw = None   # heading when the current turn began
-        self.turn_tolerance = 0.02   # rad, about 1 degree
+        self.yaw = None 
+        self.turn_start_yaw = None
+        self.turn_tolerance = 0.02 
 
     def process_odom(self, msg):
+        "Processes the odometry data to determine the current yaw of the robot"
         q = msg.pose.pose.orientation
         self.yaw = math.atan2(2 * (q.w * q.z + q.x * q.y),
                               1 - 2 * (q.y * q.y + q.z * q.z))
 
     @staticmethod
     def angle_diff(a, b):
-        """ a - b, wrapped to [-pi, pi] """
+        """Finds the difference between two angles a and b, and returns a value in the range [-pi, pi]"""
         return math.atan2(math.sin(a - b), math.cos(a - b))
     
     def run_loop(self):
-        """ if state is straight, publish a straight message, if turning, publish a turn message. also make the neato do those things. 
-        if its been in that state for long enough, switch to the other state. """
+        """ If state is straight, publish a straight message, if turning, publish a turn message. Also make the neato do those things. 
+        If its been in that state for long enough, switch to the other state. """
         msg = Twist()
 
         if self.sides_completed >= self.total_sides:

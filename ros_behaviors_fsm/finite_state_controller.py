@@ -1,12 +1,14 @@
+"""This node implements a finite state machine that controls the behavior of a robot. 
+It controls three behaviors: driving in a square pattern, driving in a spiral pattern and stopping to avoid collisions
+and following a wall. The FSM transitions between these behaviors based on bump sensor data. If both bump sensors are triggered, 
+the FSM switches to wall following mode. An emergency stop behavior is implemented to halt the robot if any bump sensors are activated."""
 from enum import Enum
-
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import SingleThreadedExecutor
 from geometry_msgs.msg import Twist
 from neato2_interfaces.msg import Bump
 import threading
-
 from ros_behaviors_fsm.drive_square import DriveSquareNode
 from ros_behaviors_fsm.spiral_collision_avoidance import SpiralCollisionAvoidanceNode
 from ros_behaviors_fsm.wall_follower import WallFollowingNode
@@ -21,6 +23,7 @@ class State(Enum):
 
 class BehaviorFSMNode(Node):
     def __init__(self, square, spiral, wall, estop):
+        """Initializes the node, sets up the publisher and subscriber, and initializes parameters for the finite state machine"""
         super().__init__('finite_state_controller')
         self.square = square
         self.spiral = spiral
@@ -45,6 +48,7 @@ class BehaviorFSMNode(Node):
         self.get_logger().info('Press Enter to simulate both side bumpers')
 
     def wait_for_enter(self):
+        """Waits for the user to press Enter to simulate both side bumpers being triggered"""
         try:
             while True:
                 input()
@@ -53,14 +57,17 @@ class BehaviorFSMNode(Node):
             pass
 
     def process_bump(self, msg):
+        """Processes the bump sensor data to determine if the left or right side bumpers are triggered"""
         self.left_side = bool(msg.left_side)
         self.right_side = bool(msg.right_side)
 
     def set_state(self, new_state):
+        """Sets the current state of the FSM to the new state and logs the transition"""
         self.get_logger().info(f'{self.state.name} -> {new_state.name}')
         self.state = new_state
 
     def run_loop(self):
+        """Runs the main loop of the FSM, finding the current state and executing its behavior."""
         sim_bump, self.sim_bump = self.sim_bump, False 
         if self.state == State.SPIRAL and (
                 (self.left_side and self.right_side) or sim_bump):

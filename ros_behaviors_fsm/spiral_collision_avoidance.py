@@ -1,5 +1,5 @@
+"""This node implements collision avoidance using the laser scan data while the robot is moving in a spiral pattern"""
 import math
-
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
@@ -10,6 +10,7 @@ from sensor_msgs.msg import LaserScan
 class SpiralCollisionAvoidanceNode(Node):
 
     def __init__(self):
+        "Initializes the node, sets up the publisher and subscriber, and initializes parameters for the spiral motion and collision avoidance"
         super().__init__('collision_avoidance_node')
 
         self.timer_period = 0.1
@@ -30,6 +31,7 @@ class SpiralCollisionAvoidanceNode(Node):
         self.close_to_wall = False
 
     def process_scan(self, msg):
+        "Processes the laser scan data to determine if the robot is close to a wall"
         n = len(msg.ranges)
         cone = [msg.ranges[i % n]
                 for i in range(-self.cone_half_angle, self.cone_half_angle + 1)]
@@ -37,6 +39,7 @@ class SpiralCollisionAvoidanceNode(Node):
         self.close_to_wall = bool(valid) and min(valid) <= self.stop_distance
 
     def run_loop(self):
+        "If the robot is not close to a wall, move in a spiral pattern. If it is close to a wall, stop."
         vel = Twist()
         if not self.close_to_wall:
             radius = self.start_radius + self.radius_growth * self.spiral_time

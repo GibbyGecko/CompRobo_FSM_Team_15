@@ -1,3 +1,5 @@
+""""This node is no longer used as we decided to do a different behavior, but the code used here was used in the 
+spiral_collision_avoidance.py file."""
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist

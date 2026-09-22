@@ -104,7 +104,6 @@ Transitions:
 <img width="481" height="253" alt="Untitled" src="https://github.com/user-attachments/assets/a2eee690-da7d-4a56-84b7-e68211983980" />
 
 
-[FSM diagram]
 ### Implementation Details
 
 `finite_state_controller.py` contains `BehaviorFSMNode`. `main()` creates one instance of each node and adds them all to a `SingleThreadedExecutor`, so every node keeps receiving its sensor data. The FSM cancels each behavior's own timer, then runs a 10 Hz timer of its own that calls the current behavior's `run_loop()`. Because only one `run_loop()` runs at a time, only one node ever publishes to `cmd_vel`.

@@ -5,7 +5,7 @@ Author names: Ophelia Lonzo, Liam Brennan
 
 ## Project Overview
 
-For this project we programmed a Neato to run a sequence of behaviors inside a finite state machine. During this sequence it drives a square, drives forward in a spiral until it; sees something, completes a full circle, or you push both side bumpers, and then finds a wall and follows it. During this sequence a bump-sensor e-stop is running for safety. 
+For this project we programmed a Neato to run a sequence of behaviors inside a finite state machine. During this sequence it drives a square, drives forward in a spiral until it; sees something or you push both side bumpers, and then finds a wall and follows it. During this sequence a bump-sensor e-stop is running for safety. 
 
 
 Key design choices:
@@ -52,7 +52,7 @@ Bag: `bags/collision_avoidance_demo`
 
 ### Behavior 4: Spiral Collision avoidance (`spiral_collision_avoidance.py`)
 
-**What it does.** Drives in a expanding spiral until it has completed a complete rotation or if it sees something in a 30 Deg cone in front of it within 1 m.
+**What it does.** Drives in a expanding spiral until if it sees something in a 30 Deg cone in front of it within 1 m.
 
 **Implementation.** `SpiralCollisionAvoidanceNode` subscribes to `scan` (`sensor_msgs/LaserScan`) and reads the rays in a 30 Deg cone in front of itself, and publishes its linear and angular velocities to 'cmd_vel' such that it follows a spiral that starts with a radius of 0.2 m which grows by 0.03 m every 0.1 sec.
 
@@ -89,17 +89,19 @@ Bag: `bags/wall_follower_demo`
 
 ### Overall Design
 
-A Neato running the FSM drives a square, drives forward in a spiral until it; sees something, or completes a full circle. When both side bumpers are pressed (or Enter is pressed for simulation), it approaches the wall, turns parallel, and follows it. At any point, pressing any bumper e-stops the robot until the bumper is released.
+A Neato running the FSM drives a square, drives forward in a spiral until it; sees a wall to follow or both side bumpers are pressed. When both side bumpers are pressed (or Enter is pressed for simulation), it approaches the wall, turns parallel, and follows it. At any point, pressing any bumper e-stops the robot until the bumper is released.
 
 States:
 - Drive square: runs `drive_square.py` until four sides are completed.
-- Spiral collision avoidance: runs `spiral_collision_avoidance.py`, which drives one full spiral with lidar collision avoidance.
+- Spiral collision avoidance: runs `spiral_collision_avoidance.py`, which drives in an expanding spiral with lidar collision avoidance.
 - Wall following: runs `wall_follower.py` (approaches, turns, follows).
 
 Transitions:
 - Drive square to spiral collision avoidance: four sides completed.
 - Spiral collision avoidance to wall following: both side bumpers pressed, or Enter in simulation.
 - Emergency stop: any bump publishes zero velocity in any state.
+
+<img width="481" height="253" alt="Untitled" src="https://github.com/user-attachments/assets/a2eee690-da7d-4a56-84b7-e68211983980" />
 
 
 [FSM diagram]
@@ -120,7 +122,7 @@ Capabilities and limitations:
 
 ### Demonstration
 
-[demo on real neato, what is bad with a real neato]
+When running our code on a real neato(EX: https://youtu.be/Rbukj9MPeXE?si=hfSjVmLXsk7lxJlQ) the only change we had to make was slightly modifying the angles of the corners in the square drawing node to account for the slight difference between the real and simulation neato.
 
 Bag: `bags/finite_state_controller_demo`
 
@@ -139,8 +141,8 @@ Bag: `bags/finite_state_controller_demo`
 
 ## Learning Objectives and Final Takeaways
 
-- [learning goals]
--
+- Learn how to use ros2.
+- Learn how to effectively use a simulator to test code.
 - Odometrey is very useful. Timing a turn assumes the robot does exactly what it is told; odometry checks it.
 - Plan for how to manage which node gets `cmd_vel`. 
 - Test on the real robot early. 
